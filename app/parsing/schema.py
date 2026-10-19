@@ -47,14 +47,26 @@ class Project(Lenient):
     technologies: list[str] = Field(default_factory=list)
 
 
-class ResumeBody(Lenient):
-    """Resume ka woh hissa jo LLM nikalta hai."""
+class ResumeBody(BaseModel):
+    skills: list[str] = []
+    experience: list[Experience] = []
+    # ... your other fields ...
+    education: list[Education] = []      # copy exact lines from git diff
+    projects: list[Project] = []         # copy exact lines from git diff
+    certifications: list[str] = []
 
-    skills: list[str] = Field(default_factory=list)
-    experience: list[Experience] = Field(default_factory=list)
-    education: list[Education] = Field(default_factory=list)
-    projects: list[Project] = Field(default_factory=list)
-    certifications: list[str] = Field(default_factory=list)
+    @field_validator("certifications", "skills", mode="before")
+    @classmethod
+    def flatten_to_strings(cls, v):
+        if not isinstance(v, list):
+            return v
+        out = []
+        for item in v:
+            if isinstance(item, dict):
+                item = item.get("name") or item.get("title") or ""
+            if isinstance(item, str) and item.strip():
+                out.append(item.strip())
+        return out
 
 
 class ParsedResume(ResumeBody):

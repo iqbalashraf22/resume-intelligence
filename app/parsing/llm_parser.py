@@ -11,9 +11,12 @@ SYSTEM_PROMPT = (
     "with no explanation and no markdown. Rules: use only information that is in the text; "
     'never invent anything; use "" for missing text and [] for missing lists; '
     "keep bullet points exactly as written; skills must be a flat list of single skill names. "
+    "The skills section may have several labeled lines such as 'Languages:' or 'Tools:'; "
+    "include the skills from EVERY line, without the labels. "
     "Include EVERY job, EVERY education entry and EVERY project in the text: one JSON object "
     "for each, and never stop after the first one. For a project, put a one-sentence summary "
-    "of its bullet points in description."
+    "of its bullet points in description. "
+    "Certifications must be plain strings, not objects."
 )
 
 FORMAT_EXAMPLE = """{
