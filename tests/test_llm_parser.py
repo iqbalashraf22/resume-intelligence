@@ -78,7 +78,7 @@ def test_api_error_is_reported_clearly():
         def chat_completion(self, **kwargs):
             raise ConnectionError("no internet")
 
-    with pytest.raises(RuntimeError, match="Hugging Face"):
+    with pytest.raises(RuntimeError, match="LLM call"):
         parse_sections(SECTIONS, Broken())
 
 

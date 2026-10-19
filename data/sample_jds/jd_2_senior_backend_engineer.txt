@@ -1,0 +1,22 @@
+Senior Backend Engineer
+FinServe Technologies, Bengaluru
+
+About the role
+Our payments platform handles millions of transactions a day. We need a senior engineer to design reliable, fast backend services.
+
+Responsibilities
+- Design and build microservices for payment processing
+- Improve API performance and reliability
+- Lead the move of services onto Kubernetes
+
+Requirements
+- 4+ years of backend development experience
+- Strong Java or Go
+- Experience with microservices
+- Experience with PostgreSQL and Redis
+- Experience with Kafka or similar messaging systems
+- Hands-on experience with Kubernetes and Docker
+
+Nice to have
+- AWS certification
+- Experience building rate limiting or caching systems

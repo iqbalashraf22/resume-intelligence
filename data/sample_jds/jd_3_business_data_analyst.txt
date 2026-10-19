@@ -1,0 +1,22 @@
+Business Data Analyst
+Orbit Commerce, Chennai
+
+About the role
+Work with product and marketing teams to turn data into decisions. You will own reporting and run experiments.
+
+Responsibilities
+- Build dashboards and automated reports
+- Analyse customer funnels and find drop-offs
+- Design and analyse A/B tests
+
+Requirements
+- 2+ years of experience as a data or business analyst
+- Strong SQL
+- Python for data analysis
+- Experience with Tableau or Power BI
+- Knowledge of A/B testing and basic statistics
+- Good communication with non-technical stakeholders
+
+Nice to have
+- Google Analytics
+- Degree in Statistics or a related field

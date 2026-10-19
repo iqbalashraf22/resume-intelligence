@@ -1,0 +1,23 @@
+DevOps Engineer (Entry Level)
+CloudNova Systems, Noida
+
+About the role
+Join our platform team to help automate how we build, test and deploy software.
+
+Responsibilities
+- Maintain CI/CD pipelines
+- Write scripts to automate routine operations
+- Set up monitoring and alerts for our services
+
+Requirements
+- Bachelor's degree in Computer Science or IT
+- Basic knowledge of AWS (EC2, S3)
+- Docker
+- Experience with Jenkins or GitHub Actions
+- Scripting in Bash or Python
+- Familiarity with Linux
+
+Nice to have
+- Kubernetes
+- Terraform
+- Monitoring tools such as Prometheus or Grafana

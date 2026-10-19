@@ -69,12 +69,12 @@ def extract_json(text: str) -> str:
     return text[start : end + 1] if start != -1 and end > start else text
 
 
-def parse_sections(sections: dict, client=None) -> ResumeBody:
+def ask_json(system_prompt: str, user_prompt: str, model_cls, client=None):
+    """LLM se JSON maango, model_cls se check karo, galat ho toh error dikha kar dobara maango."""
     client = client or get_client()
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Return JSON in this format. Every list can hold many objects: repeat the object once for each entry in the text.\n{FORMAT_EXAMPLE}\n\n"
-                                    f"Resume text:\n{build_input(sections)}"},
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
     ]
 
     last_error = None
@@ -82,11 +82,11 @@ def parse_sections(sections: dict, client=None) -> ResumeBody:
         try:
             response = client.chat_completion(messages=messages, max_tokens=2000, temperature=0)
         except Exception as e:   # token / model / network ki galti, retry se theek nahi hogi
-            raise RuntimeError(f"Hugging Face call fail hui: {e}") from e
+            raise RuntimeError(f"LLM call fail hui: {e}") from e
 
         raw = response.choices[0].message.content or ""
         try:
-            return ResumeBody.model_validate_json(extract_json(raw))
+            return model_cls.model_validate_json(extract_json(raw))
         except ValueError as e:   # galat JSON ya galat schema (pydantic ka error bhi ValueError hai)
             last_error = e
             messages += [
@@ -96,3 +96,12 @@ def parse_sections(sections: dict, client=None) -> ResumeBody:
             ]
 
     raise ValueError(f"LLM {MAX_RETRIES + 1} koshishon mein sahi JSON nahi de paya: {last_error}")
+
+
+def parse_sections(sections: dict, client=None) -> ResumeBody:
+    user_prompt = (
+        "Return JSON in this format. Every list can hold many objects: repeat the object "
+        f"once for each entry in the text.\n{FORMAT_EXAMPLE}\n\n"
+        f"Resume text:\n{build_input(sections)}"
+    )
+    return ask_json(SYSTEM_PROMPT, user_prompt, ResumeBody, client)

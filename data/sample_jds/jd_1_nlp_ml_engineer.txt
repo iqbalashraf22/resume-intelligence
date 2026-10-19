@@ -1,0 +1,23 @@
+NLP / Machine Learning Engineer
+Lingua Labs, Hyderabad
+
+About the role
+We build language models that power customer support tools. You will fine-tune and ship NLP models and help us build retrieval-based assistants.
+
+Responsibilities
+- Fine-tune transformer models for classification and entity extraction
+- Build retrieval-augmented generation (RAG) features on top of a vector database
+- Track experiments and deploy models as APIs
+
+Requirements
+- 2+ years of experience in machine learning or NLP
+- Strong Python and PyTorch
+- Experience with Hugging Face Transformers
+- Experience with vector databases and semantic search
+- Experience with MLflow or similar experiment tracking
+- Master's degree in a related field
+
+Nice to have
+- Kubernetes
+- LangChain
+- Experience with Docker
