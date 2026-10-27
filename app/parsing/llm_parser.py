@@ -42,10 +42,13 @@ def get_client():
     if os.getenv("LLM_BACKEND", "hf").lower() == "ollama":
         from .ollama_client import OllamaClient
 
+        num_gpu = os.getenv("OLLAMA_NUM_GPU")
         return OllamaClient(
             model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b"),
             host=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
             api_key=os.getenv("OLLAMA_API_KEY") or None,   # cloud ke liye zaroori, local ke liye nahi
+            num_ctx=int(os.getenv("OLLAMA_NUM_CTX", "8192")),
+            num_gpu=int(num_gpu) if num_gpu else None,
         )
 
     from huggingface_hub import InferenceClient
@@ -54,6 +57,7 @@ def get_client():
     if not token:
         raise RuntimeError("HF_TOKEN nahi mila. Project folder ki .env file mein daalo.")
     return InferenceClient(model=os.getenv("HF_MODEL", DEFAULT_MODEL), token=token)
+
 
 def build_input(sections: dict) -> str:
     """Sirf kaam ke sections bhejo. Header (naam, phone, email) LLM ko nahi jata."""

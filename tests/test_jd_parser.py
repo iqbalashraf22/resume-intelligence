@@ -2,9 +2,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.parsing.jd_parser import JobDescription, parse_job_description
+from app.parsing.jd_parser import JobDescription, bullet_requirements, parse_job_description
 
-GOOD = '{"title": "ML Engineer", "required": ["Python", "PyTorch"], "preferred": ["Kubernetes"]}'
+JD_TEXT = """ML Engineer
+Lingua Labs
+
+Responsibilities
+- Fine-tune transformer models
+
+Requirements
+- 2+ years of experience in machine learning
+- Strong Python and PyTorch
+- Experience with vector databases
+
+Nice to have
+- Kubernetes
+- LangChain
+"""
 
 
 class FakeClient:
@@ -20,44 +34,91 @@ class FakeClient:
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=reply))])
 
 
-def test_valid_json_is_parsed():
-    jd = parse_job_description("We need an ML engineer", FakeClient(GOOD))
+def parse(reply, text=JD_TEXT):
+    return parse_job_description(text, FakeClient(reply))
+
+
+def test_bullet_requirements_uses_headings_and_ignores_responsibilities():
+    assert bullet_requirements(JD_TEXT) == [
+        ("required", "2+ years of experience in machine learning"),
+        ("required", "Strong Python and PyTorch"),
+        ("required", "Experience with vector databases"),
+        ("preferred", "Kubernetes"),
+        ("preferred", "LangChain"),
+    ]
+
+
+def test_good_items_are_kept_and_missed_bullets_are_added():
+    jd = parse('{"title": "ML Engineer", "required": ["Python", "PyTorch"], "preferred": ["Kubernetes", "LangChain"]}')
     assert jd.title == "ML Engineer"
-    assert jd.required == ["Python", "PyTorch"]
-    assert jd.preferred == ["Kubernetes"]
+    assert jd.required == ["Python", "PyTorch",
+                           "2+ years of experience in machine learning", "Experience with vector databases"]
+    assert jd.preferred == ["Kubernetes", "LangChain"]
 
 
-def test_duplicates_blanks_and_overlap_are_removed():
-    reply = '{"required": ["Python", "python", " ", "SQL"], "preferred": ["sql", "Docker", "Docker"]}'
-    jd = parse_job_description("text", FakeClient(reply))
-    assert jd.required == ["Python", "SQL"]
-    assert jd.preferred == ["Docker"]
+def test_values_copied_from_the_format_example_are_removed():
+    # Model ne example ki "SQL" aur "Docker" copy kar di, jo JD mein hai hi nahi
+    jd = parse('{"required": ["Python", "SQL"], "preferred": ["Docker", "Kubernetes"]}')
+    assert "SQL" not in jd.required
+    assert "Docker" not in jd.preferred
+    assert "Python" in jd.required and "Kubernetes" in jd.preferred
+
+
+def test_placeholder_values_are_removed():
+    jd = parse('{"required": ["<requirement>", "Python"], "preferred": ["<requirement>"]}')
+    assert not any("<" in x for x in jd.required + jd.preferred)
+
+
+def test_model_that_returns_nothing_still_gets_all_bullets():
+    jd = parse('{"required": [], "preferred": []}')
+    assert len(jd.required) == 3
+    assert jd.preferred == ["Kubernetes", "LangChain"]
+
+
+def test_short_item_must_match_whole_word():
+    text = "Requirements\n- Good communication skills\n"
+    jd = parse('{"required": ["Go"]}', text)       # "Go" sirf "Good" ke andar hai
+    assert jd.required == ["Good communication skills"]
 
 
 def test_nulls_are_tolerated():
-    jd = parse_job_description("text", FakeClient('{"title": null, "required": ["Go"], "preferred": null}'))
-    assert jd.title == "" and jd.preferred == []
+    jd = parse('{"title": null, "required": ["Python"], "preferred": null}')
+    assert "Python" in jd.required and jd.title == ""
 
 
 def test_empty_jd_raises_before_calling_llm():
-    client = FakeClient(GOOD)
+    client = FakeClient("{}")
     with pytest.raises(ValueError):
         parse_job_description("   \n ", client)
     assert client.calls == 0
 
 
 def test_retry_after_invalid_json():
-    client = FakeClient("not json", GOOD)
-    jd = parse_job_description("text", client)
-    assert client.calls == 2 and jd.required == ["Python", "PyTorch"]
+    client = FakeClient("not json", '{"required": ["Python"]}')
+    jd = parse_job_description(JD_TEXT, client)
+    assert client.calls == 2 and "Python" in jd.required
 
 
 def test_very_long_text_is_truncated():
-    client = FakeClient(GOOD)
-    parse_job_description("x" * 50_000, client)
-    user_message = client.last_messages[-1]["content"]
-    assert len(user_message) < 7000
+    client = FakeClient("{}")
+    parse_job_description("Requirements\n- " + "x" * 50_000, client)
+    assert len(client.last_messages[-1]["content"]) < 7000
 
 
 def test_model_can_be_built_directly():
     assert JobDescription().required == []
+
+from app.parsing.jd_parser import parse_job_description_rules  # noqa: E402
+
+
+def test_rules_parser_works_without_any_llm():
+    jd = parse_job_description_rules(JD_TEXT)
+    assert jd.title == "ML Engineer"
+    assert jd.required == ["2+ years of experience in machine learning", "Strong Python and PyTorch",
+                           "Experience with vector databases"]
+    assert jd.preferred == ["Kubernetes", "LangChain"]
+
+
+def test_rules_parser_rejects_empty_text():
+    with pytest.raises(ValueError):
+        parse_job_description_rules("  \n ")
